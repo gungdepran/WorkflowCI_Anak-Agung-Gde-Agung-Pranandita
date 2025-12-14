@@ -34,13 +34,14 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
+        pip install setuptools
         pip install -r requirements.txt
         
     - name: Run mlflow project
       run: |
         cd MLProject
-        # Menjalankan project tanpa conda (local env)
-        python modelling_tunning.py
+        
+        python modelling_tuning.py
   
     - name: Get latest MLflow run_id
       run: |
