@@ -37,12 +37,12 @@ jobs:
         pip install setuptools
         pip install -r requirements.txt
         
-    - name: Run mlflow project
+    - name: Run MLflow Project
+      env:
+        MLFLOW_TRACKING_URI: https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/Model_tracking_asah.mlflow
       run: |
-        cd MLProject
-        
-        mlflow run MLProject 
-  
+        mlflow run MLProject
+      
     - name: Get latest MLflow run_id
       run: |
         echo "Mencari Run ID terakhir..."
