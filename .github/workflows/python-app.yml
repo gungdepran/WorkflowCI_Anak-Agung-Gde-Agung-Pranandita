@@ -1,0 +1,108 @@
+name: Workflow CI & Docker
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_PASSWORD }}
+      DAGSHUB_USER_TOKEN: ${{ secrets.DAGSHUB_PASSWORD }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.12.7
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12.7"
+        
+    - name: Check Env
+      run: |
+        echo "Checking python version..."
+        python --version
+        echo "Listing files in current directory..."
+        ls -R
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run mlflow project
+      run: |
+        cd MLProject
+        # Menjalankan project tanpa conda (local env)
+        python modelling.py
+    # 6. Get latest MLflow run_id (Sesuai gambar)
+    # Kita ambil Run ID terakhir untuk keperluan logging (opsional tapi ada di gambar)
+    - name: Get latest MLflow run_id
+      run: |
+        echo "Mencari Run ID terakhir..."
+        echo "Training Finished. Model saved locally as 'model_output_lokal'."
+
+    # 7. Upload Artifacts (Pengganti Upload Google Drive) [cite: 318, 358]
+    # Sesuai gambar ada tahap upload. Kita gunakan GitHub Artifacts (lebih mudah & aman dibanding GDrive API)
+    - name: Upload Artifacts to GitHub
+      uses: actions/upload-artifact@v4
+      with:
+        name: trained-model
+        path: |
+          MLProject/model_output_lokal
+          MLProject/training_confusion_matrix.png
+          MLProject/metric_info.json
+          MLProject/estimator.html
+
+    # 8. Login to Docker Hub (Sesuai gambar)
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # 9. Build Docker Model (Sesuai gambar)
+    - name: Build Docker Model
+      run: |
+        cd MLProject
+        
+        echo "Building Docker Image from local model..."
+        # -m: Folder tempat model tersimpan (hasil dari save_model di script python)
+        # -n: Nama image (username/repo:tag)
+        
+        mlflow models build-docker \
+          -m "model_output_lokal" \
+          -n "${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest" \
+          # --enable-mlserver
+
+    # 10. Tag Docker Image (Sudah otomatis di step build, tapi kita pastikan ulang)
+    - name: Tag Docker Image
+      run: |
+        # docker tag ${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest ${{ secrets.DOCKER_USERNAME }}/submission-mlops:v1
+
+        # Tag 1: 'latest' (Selalu update ke yang baru)
+        docker tag ${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest ${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest
+        
+        # ${{ github.run_id }} adalah nomor urut otomatis dari GitHub
+        docker tag ${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest ${{ secrets.DOCKER_USERNAME }}/submission-mlops:${{ github.run_id }}
+
+    # 11. Push Docker Image (Sesuai gambar)
+    - name: Push Docker Image
+      run: |
+        echo "Pushing image to Docker Hub..."
+        docker push ${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest
+        # Push tag unik (history)
+        docker push ${{ secrets.DOCKER_USERNAME }}/submission-mlops:${{ github.run_id }}
+        
+        # docker push ${{ secrets.DOCKER_USERNAME }}/submission-mlops:latest
+        # docker push ${{ secrets.DOCKER_USERNAME }}/submission-mlops:v1
+
+    # 12. Complete Job
+    - name: Complete job
+      run: echo "CI/CD Pipeline Completed Successfully!"
