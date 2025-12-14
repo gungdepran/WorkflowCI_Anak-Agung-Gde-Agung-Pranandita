@@ -25,7 +25,7 @@ jobs:
         python-version: "3.12.7"
         
     - name: Check Env
-      run: |
+      run: 
         echo "Checking python version..."
         python --version
         echo "Listing files in current directory..."
@@ -40,8 +40,8 @@ jobs:
     - name: Run mlflow project
       run: |
         cd MLProject
-        export MLFLOW_TRACKING_URI=./mlruns
-        mlflow run . --env-manager=local
+        
+        mlflow run MLProject --env-manager=local
   
     - name: Get latest MLflow run_id
       run: |
