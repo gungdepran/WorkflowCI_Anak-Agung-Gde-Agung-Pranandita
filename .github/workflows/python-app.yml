@@ -40,7 +40,7 @@ jobs:
     - name: Run mlflow project
       run: |
         cd MLProject
-
+        export MLFLOW_TRACKING_URI=./mlruns
         mlflow run . --env-manager=local
   
     - name: Get latest MLflow run_id
