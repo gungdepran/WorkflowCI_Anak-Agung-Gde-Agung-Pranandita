@@ -41,7 +41,7 @@ jobs:
       run: |
         cd MLProject
         
-        python modelling_tuning.py
+        python modelling.py
   
     - name: Get latest MLflow run_id
       run: |
