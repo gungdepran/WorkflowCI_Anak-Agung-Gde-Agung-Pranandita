@@ -1,7 +1,7 @@
 name: Sentiment_Analysis_JKN
 
-conda_env:conda.yaml
+conda_env: conda.yaml
 
 entry_points:
   main: 
-    command: 'python modelling.py'   
+    command: "python modelling.py"  
