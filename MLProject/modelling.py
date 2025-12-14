@@ -30,7 +30,7 @@ try:
 except FileNotFoundError:
     df = pd.read_csv('preprocessed_Mobile_JKN.csv')
 
-# Fungsi labeling
+
 def get_sentiment(score):
     if score <= 3:
         return 'negatif'
@@ -39,20 +39,20 @@ def get_sentiment(score):
 
 df['sentiment_category'] = df['score'].apply(get_sentiment)
 
-# Undersampling (Agar data seimbang)
+
 min_count = df['sentiment_category'].value_counts().min()
 df_balanced = df.groupby('sentiment_category').apply(
     lambda x: x.sample(min_count, random_state=42)
 ).reset_index(drop=True)
 
-# Encoding Label
+
 le = LabelEncoder()
 df_balanced['label'] = le.fit_transform(df_balanced['sentiment_category'])
 
 X = df_balanced['clean_content'].values.astype(str)
 y = df_balanced['label'].values
 
-# Split Data
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 print(f"Data siap! Train shape: {X_train.shape}, Test shape: {X_test.shape}")
