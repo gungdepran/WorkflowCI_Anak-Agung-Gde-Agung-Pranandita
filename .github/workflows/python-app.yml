@@ -42,7 +42,7 @@ jobs:
         MLFLOW_TRACKING_URI: https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/Model_tracking_asah.mlflow
       run: |
         cd MLProject
-        mlflow run MLProject
+        mlflow run .
       
     - name: Get latest MLflow run_id
       run: |
